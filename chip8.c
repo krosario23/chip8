@@ -30,4 +30,5 @@ void chip_debug(Chip8* c) {
 
 uint16_t chip_fetch(Chip8* c) {
     return c->memory[c->PC];
+    c->PC += 2;
 }

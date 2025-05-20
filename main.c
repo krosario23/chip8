@@ -7,7 +7,6 @@ int main() {
 
     for (int i = 0; i < 100; i++) {
         printf("%02x\n", chip_fetch(&system));
-        system.PC++;
     }
     return 0;
 }
