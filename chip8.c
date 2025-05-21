@@ -1,6 +1,6 @@
 #include "chip8.h"
 
-void chip_init(Chip8* c) {
+void init(Chip8* c) {
     //ensure memory, register file, stack and screen are cleared
     memset(c->memory, 0, sizeof(c->memory));
     memset(c->V, 0, sizeof(c->V));
@@ -13,9 +13,13 @@ void chip_init(Chip8* c) {
     c->I = 0;
     c->DT = 0;
     c->DT = 0;
+
+    for (int i = 0; i < FONTSET_SIZE; i++) {
+        c->memory[i] = FONTSET[i];
+    }
 }
 
-void chip_debug(Chip8* c) {
+void debug(Chip8* c) {
     for (uint8_t i = 0; i < V_REG_FILE_SIZE; i++) {
         printf("V%u = %u\n", i, c->V[i]);
     }
@@ -28,7 +32,9 @@ void chip_debug(Chip8* c) {
     printf("Sound Timer: %u\n", c->ST);
 }
 
-uint16_t chip_fetch(Chip8* c) {
-    return c->memory[c->PC];
+uint16_t fetch(Chip8* c) {
+    uint16_t res = c->memory[c->PC] << 8 | c->memory[c->PC + 1];
     c->PC += 2;
+    return res;
 }
+

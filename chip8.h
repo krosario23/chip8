@@ -57,6 +57,8 @@ typedef struct {
     uint32_t pixels[SCREEN_HEIGHT][SCREEN_WIDTH];
 } Chip8_SDL;
 
-void chip_init(Chip8* c);
-void chip_debug(Chip8* c);
-uint16_t chip_fetch(Chip8* c);
+void init(Chip8* c);
+void debug(Chip8* c);
+uint16_t fetch(Chip8* c);
+void decode(Chip8* c);
+void executre(Chip8* c);
