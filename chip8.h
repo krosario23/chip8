@@ -1,7 +1,18 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdbool.h>
 #include <string.h>
 #include <SDL2/SDL.h>
+
+#define LOW(x) ((x) & 0xFF)
+#define HIGH(x) ((x) >> 8)
+
+#define EXTRACT_W(instruction) ((instruction & 0xF000) >> 12)
+#define EXTRACT_X(instruction) ((instruction & 0x0F00) >> 8)
+#define EXTRACT_Y(instruction) ((instruction & 0x00F0) >> 4)
+#define EXTRACT_N(instruction) ((instruction & 0x000F))
+#define EXTRACT_NN(instruction) ((instruction & 0x0FF0) >> 4)
+#define EXTRACT_NNN(instruction) ((instruction & 0x0FFF))
 
 #define MEMORY_SIZE 4096
 #define V_REG_FILE_SIZE 16
@@ -42,7 +53,7 @@ typedef struct {
     uint8_t screen[SCREEN_HEIGHT][SCREEN_WIDTH];
     uint8_t keyboard[KEYBOARD_SIZE];
 
-    uint8_t SP;
+    int8_t SP;
     uint16_t PC;
     uint16_t I;
 
@@ -59,6 +70,11 @@ typedef struct {
 
 void init(Chip8* c);
 void debug(Chip8* c);
+void write(Chip8* c, uint16_t ins);
 uint16_t fetch(Chip8* c);
 void decode(Chip8* c);
-void executre(Chip8* c);
+void stack_push(Chip8* c, uint16_t data);
+void stack_pop(Chip8* c);
+int16_t stack_top(Chip8* c);
+bool is_stack_empty(Chip8* c);
+bool is_stack_full(Chip8* c);
