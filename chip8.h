@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <assert.h>
 #include <SDL2/SDL.h>
 
 #define LOW(x) ((x) & 0xFF)
@@ -69,12 +70,13 @@ typedef struct {
 } Chip8_SDL;
 
 void init(Chip8* c);
-void debug(Chip8* c);
+void debug(Chip8* c, size_t start, size_t end);
 void write(Chip8* c, uint16_t ins);
+uint16_t read_short(Chip8* c);
 uint16_t fetch(Chip8* c);
-void decode(Chip8* c);
+void decode(Chip8* c, uint16_t curr_ins);
 void stack_push(Chip8* c, uint16_t data);
-void stack_pop(Chip8* c);
+int16_t stack_pop(Chip8* c);
 int16_t stack_top(Chip8* c);
 bool is_stack_empty(Chip8* c);
 bool is_stack_full(Chip8* c);

@@ -14,21 +14,33 @@ void init(Chip8* c) {
     c->DT = 0;
     c->ST = 0;
 
-    for (int i = 0; i < FONTSET_SIZE; i++) {
+    for (size_t i = 0; i < FONTSET_SIZE; i++) {
         c->memory[i] = FONTSET[i];
     }
 }
 
 void write(Chip8* c, uint16_t ins) {
-    
+    uint8_t low = LOW(ins);
+    uint8_t high = HIGH(ins);
+    c->memory[c->PC++] = high;
+    c->memory[c->PC++] = low;
 }
 
-void debug(Chip8* c) {
-    for (uint8_t i = 0; i < V_REG_FILE_SIZE; i++) {
-        printf("V%u = %u\n", i, c->V[i]);
+void debug(Chip8* c, size_t start, size_t end) {
+    for (size_t i = 0; i < V_REG_FILE_SIZE; i++) {
+        printf("V%zu = %u\n", i, c->V[i]);
     }
 
-    printf("\nStack Pointer: %u\n", c->SP);
+    printf("PC before run: %u\n", c->PC);
+    uint16_t save_PC = c->PC;
+    for (size_t i = start; i < end; i++) {
+        printf("memory location: %03x | instruction: %04x \n", c->PC, read_short(c));
+        c->PC += 2;
+    }
+    c->PC = save_PC;
+
+
+    printf("\nStack Pointer: %i\n", c->SP);
     printf("Program Counter: %u\n", c->PC);
     printf("Index Register: %u\n", c->I);
 
@@ -36,8 +48,13 @@ void debug(Chip8* c) {
     printf("Sound Timer: %u\n", c->ST);
 }
 
+uint16_t read_short(Chip8* c) {
+    uint16_t u16 = c->memory[c->PC] << 8 | c->memory[c->PC + 1];
+    return u16;
+}
+
 uint16_t fetch(Chip8* c) {
-    uint16_t res = c->memory[c->PC] << 8 | c->memory[c->PC + 1];
+    uint16_t res = read_short(c);
     c->PC += 2;
     return res;
 }
@@ -49,8 +66,7 @@ uint16_t fetch(Chip8* c) {
 // NN: The second byte (third and fourth nibbles). An 8-bit immediate number.
 // NNN: The second, third and fourth nibbles. A 12-bit immediate memory address.
 
-void decode(Chip8* c) {
-    uint16_t curr_ins = fetch(c);
+void decode(Chip8* c, uint16_t curr_ins) {
     uint8_t W = EXTRACT_W(curr_ins);
     uint8_t X = EXTRACT_X(curr_ins);
     uint8_t Y = EXTRACT_Y(curr_ins);
@@ -63,13 +79,19 @@ void decode(Chip8* c) {
             switch (NNN) {
                 //0x00E0 Clear screen
                 case 0x0E0: {
+                    //printf("clear screen instruction\n");
                     memset(c->screen, 0, sizeof(c->screen));
                     break;
                 }
 
                 //0x00EE Return
                 case 0x0EE: {
-
+                    //printf("return instruction\n");
+                    int16_t addr = stack_pop(c);
+                    if (!addr) {
+                        printf("error: return instruction on empty\n");
+                    }
+                    c->PC = addr;
                     break;
                 }
                 default: {
@@ -79,10 +101,12 @@ void decode(Chip8* c) {
             break;
         }
         case 0x1: {
+            //printf("jump instruction\n");
             c->PC = NNN;
             break;
         }
         case 0x2: {
+            //printf("call instruction\n");
             stack_push(c, c->PC);
             c->PC = NNN;
             break;
@@ -133,6 +157,7 @@ void decode(Chip8* c) {
 }
 
 void stack_push(Chip8* c, uint16_t data) {
+   //printf("push: %04x\n", data);
     if (!is_stack_full(c)) {
         c->stack[++c->SP] = data;
         return;
@@ -141,13 +166,15 @@ void stack_push(Chip8* c, uint16_t data) {
     printf("cannot push value %03x to stack, stack is full\n", data);
 }
 
-void stack_pop(Chip8* c) {
+int16_t stack_pop(Chip8* c) {
     if (!is_stack_empty(c)) {
+        int16_t res = stack_top(c);
         c->SP--;
-        return;
+        return res;
     }
 
     printf("cannot pop from empty stack\n");
+    return -1;
 }
 
 int16_t stack_top(Chip8* c) {
