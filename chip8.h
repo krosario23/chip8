@@ -1,9 +1,12 @@
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
 #include <SDL2/SDL.h>
+#include <errno.h>
+#include <unistd.h>
 
 #define LOW(x) ((x) & 0xFF)
 #define HIGH(x) ((x) >> 8)
@@ -12,7 +15,7 @@
 #define EXTRACT_X(instruction) ((instruction & 0x0F00) >> 8)
 #define EXTRACT_Y(instruction) ((instruction & 0x00F0) >> 4)
 #define EXTRACT_N(instruction) ((instruction & 0x000F))
-#define EXTRACT_NN(instruction) ((instruction & 0x0FF0) >> 4)
+#define EXTRACT_NN(instruction) ((instruction & 0x00FF))
 #define EXTRACT_NNN(instruction) ((instruction & 0x0FFF))
 
 #define MEMORY_SIZE 4096
@@ -24,8 +27,16 @@
 #define PROGRAM_START 0x200
 #define TIMER_MAX 255
 
-#define SCREEN_HEIGHT 32
-#define SCREEN_WIDTH 64
+#define SCREEN_HEIGHT 320
+#define SCREEN_WIDTH 640
+
+#define DISPLAY_HEIGHT 32
+#define DISPLAY_WIDTH 64
+#define DISPLAY_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT
+
+#define CPU_HZ 500
+#define TIMER_HZ 60
+#define RENDER_HZ 60
 
 const static uint8_t FONTSET[FONTSET_SIZE] = { 
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -51,7 +62,7 @@ typedef struct {
     uint8_t memory[MEMORY_SIZE];
     uint8_t V[V_REG_FILE_SIZE];
     uint16_t stack[STACK_SIZE];
-    uint8_t screen[SCREEN_HEIGHT][SCREEN_WIDTH];
+    uint8_t display[DISPLAY_WIDTH *  DISPLAY_HEIGHT];
     uint8_t keyboard[KEYBOARD_SIZE];
 
     int8_t SP;
@@ -62,21 +73,19 @@ typedef struct {
     uint8_t ST;
 } Chip8;
 
-typedef struct {
-    SDL_Window *window;
-    SDL_Renderer *renderer;
-    SDL_Texture *texture;
-    uint32_t pixels[SCREEN_HEIGHT][SCREEN_WIDTH];
-} Chip8_SDL;
 
-void init(Chip8* c);
-void debug(Chip8* c, size_t start, size_t end);
-void write(Chip8* c, uint16_t ins);
-uint16_t read_short(Chip8* c);
-uint16_t fetch(Chip8* c);
-void decode(Chip8* c, uint16_t curr_ins);
-void stack_push(Chip8* c, uint16_t data);
-int16_t stack_pop(Chip8* c);
-int16_t stack_top(Chip8* c);
-bool is_stack_empty(Chip8* c);
-bool is_stack_full(Chip8* c);
+void        init(Chip8* c);
+void        load_rom(Chip8* c, const char* filename);
+void        debug(Chip8* c, size_t start, size_t end, bool reg);
+
+void        write_short(Chip8* c, uint16_t ins);
+uint16_t    read_short(Chip8* c);
+uint16_t    fetch_short(Chip8* c);
+void        decode_short(Chip8* c, uint16_t curr_ins);
+void        emulate_cycle(Chip8* c);
+
+void        stack_push(Chip8* c, uint16_t data);
+uint16_t    stack_pop(Chip8* c);
+int16_t     stack_top(Chip8* c);
+bool        is_stack_empty(Chip8* c);
+bool        is_stack_full(Chip8* c);
