@@ -7,6 +7,7 @@
 #include <SDL2/SDL.h>
 #include <errno.h>
 #include <unistd.h>
+#include <time.h>
 
 #define LOW(x) ((x) & 0xFF)
 #define HIGH(x) ((x) >> 8)
@@ -21,7 +22,7 @@
 #define MEMORY_SIZE 4096
 #define V_REG_FILE_SIZE 16
 #define STACK_SIZE 16
-#define KEYBOARD_SIZE 16
+#define KEYPAD_SIZE 16
 
 #define FONTSET_SIZE 80
 #define PROGRAM_START 0x200
@@ -37,6 +38,28 @@
 #define CPU_HZ 500
 #define TIMER_HZ 60
 #define RENDER_HZ 60
+
+const static uint8_t KEYMAP[KEYPAD_SIZE] = {
+    SDLK_x, //0
+    SDLK_1, //1
+    SDLK_2, //2
+    SDLK_3, //3
+
+    SDLK_q, //4  
+    SDLK_w, //5
+    SDLK_e, //6
+    SDLK_a, //7
+
+    SDLK_s, //8
+    SDLK_d, //9
+    SDLK_z, //A
+    SDLK_c, //B
+
+    SDLK_4, //C
+    SDLK_r, //D
+    SDLK_f, //E
+    SDLK_v, //F
+};
 
 const static uint8_t FONTSET[FONTSET_SIZE] = { 
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -63,20 +86,23 @@ typedef struct {
     uint8_t V[V_REG_FILE_SIZE];
     uint16_t stack[STACK_SIZE];
     uint8_t display[DISPLAY_WIDTH *  DISPLAY_HEIGHT];
-    uint8_t keyboard[KEYBOARD_SIZE];
+    bool keypad[KEYPAD_SIZE];
 
     int8_t SP;
     uint16_t PC;
     uint16_t I;
 
-    uint8_t DT;
-    uint8_t ST;
+    uint8_t delay_timer;
+    uint8_t sound_timer;
+
+    bool shift_mode;
+    bool debug_mode;
 } Chip8;
 
 
 void        init(Chip8* c);
 void        load_rom(Chip8* c, const char* filename);
-void        debug(Chip8* c, size_t start, size_t end, bool reg);
+void        debug(Chip8* c, size_t mem_start, size_t mem_end, bool reg);
 
 void        write_short(Chip8* c, uint16_t ins);
 uint16_t    read_short(Chip8* c);

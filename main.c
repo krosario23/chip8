@@ -1,9 +1,22 @@
 #include "chip8.h"
 
-int main() {
+int main(int argc, char* argv[]) {
     Chip8 sys;
     init(&sys);
-    load_rom(&sys, "ibm-logo.ch8");
+    load_rom(&sys, "corax.ch8");
+
+    printf("argc = %i\n", argc);
+
+    if (argc > 1) {
+        for (int i = 0; i < argc; i++) {
+            if (strcmp(argv[i],"-debug") == 0) {
+                sys.debug_mode = true;
+            }
+            if (strcmp(argv[i],"-shift") == 0) {
+                sys.shift_mode = true;
+            }
+        }
+    }
     
     SDL_Window *window = NULL;
     SDL_Surface *win_surf = NULL;
@@ -38,6 +51,7 @@ int main() {
 
     const uint64_t PERF_FREQ = SDL_GetPerformanceFrequency();
     uint64_t prev = SDL_GetPerformanceCounter();
+
     const double cpu_period = (double)PERF_FREQ/(double)CPU_HZ;
     const double timer_period = (double)PERF_FREQ/(double)TIMER_HZ;
     const double render_period = (double)PERF_FREQ/(double)RENDER_HZ;
@@ -48,7 +62,29 @@ int main() {
     while (running) {
         while (SDL_PollEvent(&e)) {
             if (e.type == SDL_QUIT) running = 0;
-            if (e.type == SDL_KEYDOWN && e.key.keysym.sym == SDLK_ESCAPE) running = 0;
+            if (e.type == SDL_KEYDOWN) {
+                switch (e.key.keysym.sym) {
+                case SDLK_ESCAPE: {
+                    running = 0;
+                    break;
+                }
+                default:
+                    break;
+                }
+
+                for (int i = 0; i < KEYPAD_SIZE; i++) {
+                    if (e.key.keysym.sym == KEYMAP[i]) {
+                        sys.keypad[i] = true;
+                    }
+                }
+            }
+            if (e.type == SDL_KEYUP) {
+                for (int i = 0; i < KEYPAD_SIZE; i++) {
+                    if (e.key.keysym.sym == KEYMAP[i]) {
+                        sys.keypad[i] = false;
+                    }
+                }
+            } 
         }
         uint64_t curr = SDL_GetPerformanceCounter();
         uint64_t elapsed = curr - prev;
@@ -60,12 +96,17 @@ int main() {
 
         while (cpu_acc >= cpu_period) {
             emulate_cycle(&sys);
+            if (sys.debug_mode) {
+                debug(&sys,0,0,0);
+                int c = getc(stdin);
+                if ((char)c == 'q') exit(0);
+            }   
             cpu_acc -= cpu_period;
         }
 
         while (timer_acc >= timer_period) {
-            if (sys.DT > 0) sys.DT--;
-            if (sys.ST > 0) sys.ST--;
+            if (sys.delay_timer > 0) sys.delay_timer--;
+            if (sys.sound_timer > 0) sys.sound_timer--;
             timer_acc -= timer_period;
         }
 
@@ -85,7 +126,8 @@ int main() {
                 if(SDL_SetPaletteColors(frame_buffer->format->palette, palette, 0, 2) !=0) {
                     fprintf(stderr, "SDL_SetPaletteColors: %s\n", SDL_GetError());
                 }
-            }   
+            }
+
             SDL_Surface *conv = SDL_ConvertSurface(frame_buffer, win_surf->format, 0);
             if (!conv) {
                 fprintf(stderr, "SDL_ConvertSurface failed: %s\n", SDL_GetError());
@@ -104,7 +146,6 @@ int main() {
             render_acc = 0.0;
         }
         SDL_Delay(16);
-        
     }
 
     SDL_FreeSurface(frame_buffer);
