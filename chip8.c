@@ -11,14 +11,14 @@ void init(Chip8* c) {
 
     //clear special registers & timers
     c->SP = -1;
-    c->PC = 0x200;
+    c->PC = PROGRAM_START;
     c->I  = 0;
     c->delay_timer = 0;
     c->sound_timer = 0;
     c->shift_mode = false;
     c->debug_mode = false;
 
-    for (size_t i = 0; i < FONTSET_SIZE; i++) {
+    for (size_t i = FONT_OFFSET; i < FONTSET_SIZE; i++) {
         c->memory[i] = FONTSET[i];
     }
 }
@@ -197,7 +197,7 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
                     if (c->shift_mode) {
                         c->V[X] = c->V[Y];
                     }
-                    uint8_t msb = (c->V[X] >> 8) & 1;
+                    uint8_t msb = (c->V[X] >> 7) & 1;
                     c->V[X] <<= 1;
                     c->V[0xF] = msb;
                     break;
@@ -220,7 +220,7 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
             break;
         }
         case 0xB: {
-            c->I = NNN + c->V[0];
+            c->PC = NNN + c->V[0];
             break;
         }
         case 0xC: {
@@ -308,9 +308,27 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
                     break;
                 }
                 case 0x29: {
+                    c->I = FONT_OFFSET + (c->V[X] & 0xF) * 5;
                     break;
                 }
                 case 0x33: {
+                    uint8_t x = c->V[X];
+                    assert(c->I+2<MEMORY_SIZE);
+                    c->memory[c->I] = x / 100;
+                    c->memory[c->I + 1] = (x / 10) % 10;
+                    c->memory[c->I + 2] = x % 10;
+                    break;
+                }
+                case 0x55: {
+                    for (size_t i = 0; i <= X; i++) {
+                        c->memory[c->I + i] = c->V[i];
+                    }
+                    break;
+                }
+                case 0x65: {
+                    for (size_t i = 0; i <= X; i++) {
+                        c->V[i] = c->memory[c->I + i];
+                    }
                     break;
                 }
                 default:

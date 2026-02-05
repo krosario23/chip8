@@ -26,6 +26,7 @@
 
 #define FONTSET_SIZE 80
 #define PROGRAM_START 0x200
+#define FONT_OFFSET 0x050
 #define TIMER_MAX 255
 
 #define SCREEN_HEIGHT 320
