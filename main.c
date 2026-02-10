@@ -3,7 +3,7 @@
 int main(int argc, char* argv[]) {
     Chip8 sys;
     init(&sys);
-    load_rom(&sys, "../roms/snek.ch8");
+    load_rom(&sys, "../roms/fuse.ch8");
 
     printf("argc = %i\n", argc);
 

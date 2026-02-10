@@ -18,8 +18,8 @@ void init(Chip8* c) {
     c->shift_mode = false;
     c->debug_mode = false;
 
-    for (size_t i = FONT_OFFSET; i < FONTSET_SIZE; i++) {
-        c->memory[i] = FONTSET[i];
+    for (size_t i = 0; i < FONTSET_SIZE; i++) {
+        c->memory[FONT_OFFSET + i] = FONTSET[i];
     }
 }
 
@@ -168,14 +168,13 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
                 }
                 case 0x4: {
                     int sum = c->V[X] + c->V[Y];
-                    c->V[X] = sum;
+                    c->V[X] = sum & 0xFF;
                     c->V[0xF]= (sum > 255) ? 1 : 0;
                     break;
                 }
                 case 0x5: {
-                    int diff = c->V[X] - c->V[Y];
-                    c->V[X] = diff;
                     c->V[0xF] = (c->V[X] > c->V[Y]) ? 1 : 0;
+                    c->V[X] -= c->V[Y];
                     break;
                 }
                 case 0x6: {
@@ -188,9 +187,8 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
                     break;
                 }
                 case 0x7: {
-                    int diff = c->V[Y] - c->V[X];
-                    c->V[X] = diff;
                     c->V[0xF] = (c->V[Y] > c->V[X]) ? 1 : 0;
+                    c->V[X] = c->V[Y] - c->V[X];;
                     break;
                 }
                 case 0xE: {
@@ -313,7 +311,6 @@ void decode_short(Chip8* c, uint16_t curr_ins) {
                 }
                 case 0x33: {
                     uint8_t x = c->V[X];
-                    assert(c->I+2<MEMORY_SIZE);
                     c->memory[c->I] = x / 100;
                     c->memory[c->I + 1] = (x / 10) % 10;
                     c->memory[c->I + 2] = x % 10;
