@@ -3,21 +3,21 @@
 int main(int argc, char* argv[]) {
     Chip8 sys;
     init(&sys);
-    load_rom(&sys, "../roms/fuse.ch8");
-
-    printf("argc = %i\n", argc);
 
     if (argc > 1) {
         for (int i = 0; i < argc; i++) {
-            if (strcmp(argv[i],"-debug") == 0) {
+            if (strcmp(argv[i], "-debug") == 0) {
                 sys.debug_mode = true;
             }
-            if (strcmp(argv[i],"-shift") == 0) {
+            if (strcmp(argv[i], "-shift") == 0) {
                 sys.shift_mode = true;
+            }
+            if (strstr(argv[i], ".ch8") != NULL) {
+                load_rom(&sys, argv[i]);
             }
         }
     }
-    
+
     SDL_Window *window = NULL;
     SDL_Surface *win_surf = NULL;
     SDL_Surface *frame_buffer = NULL;
