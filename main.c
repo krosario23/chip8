@@ -27,7 +27,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
     
-    window = SDL_CreateWindow("Example", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 320, SDL_WINDOW_SHOWN);
+    window = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 320, SDL_WINDOW_SHOWN);
 
     if (!window) {
         fprintf(stderr, "SDL_CreateWindow: %s", SDL_GetError());

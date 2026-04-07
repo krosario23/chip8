@@ -36,7 +36,7 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_SIZE DISPLAY_WIDTH * DISPLAY_HEIGHT
 
-#define CPU_HZ 500
+#define CPU_HZ 300
 #define TIMER_HZ 60
 #define RENDER_HZ 60
 
