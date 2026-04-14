@@ -4,10 +4,10 @@ SDL_CFLAGS := $(shell sdl2-config --cflags)
 SDL_LIBS := $(shell sdl2-config --libs)
 
 CFLAGS = -Wall -Wextra -std=c11 $(SDL_CFLAGS)
-TARGET = prog
+TARGET = build/prog
 
 all:
-	$(CC) $(CFLAGS) main.c chip8.c -o $(TARGET) $(SDL_LIBS)
+	$(CC) $(CFLAGS) src/main.c src/chip8.c -o $(TARGET) $(SDL_LIBS)
 
 clean:
 	rm -f $(TARGET)
